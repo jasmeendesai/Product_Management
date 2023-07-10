@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const userModel = require('../model/userModel')
+const {isValidObjectId} = require('../util/validator')
+
 require('dotenv').config()
 const {SECRET_KEY} = process.env
 
@@ -28,6 +30,13 @@ const Authorisation = async function(req,res,next){
         
         let userId = req.params.userId
         let userLoggedin = req.decodedToken
+
+   
+        // userId valiadtion
+        if(!isValidObjectId(userId)){
+            return res.status(401).send({status : false, message : "Invalid User Id"})
+        }
+        
        
         const userData = await userModel.findById(userId)
         const userToBeModified = userData._id.toString()

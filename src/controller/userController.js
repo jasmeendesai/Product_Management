@@ -49,19 +49,22 @@ const { SECRET_KEY } = process.env
 
 const register = async function (req, res) {
     try {
-        let data = JSON.parse(req.body.data);
+        let data = req.body;
 
 
         //body data vaidation
 
-        const { fname, lname, email, phone, password, address } = data
-        const { shipping, billing } = address
+        const { fname, lname, email, phone, password} = data
+        
+        let address = JSON.parse(req.body.address);
+        
+        
         //req.body 
         if (!isValidRequestBody(data)) {
             return res.status(400).send({ status: false, message: "Enter data in body" })
         }
 
-        if (!fname || !lname || !email || !phone || !password || !shipping.street || !shipping.city || !shipping.pincode || !billing.street || !billing.city || !billing.pincode) {
+        if (!fname || !lname || !email || !phone || !password) {
             return res.status(400).send({ status: false, message: "Enter required fields" })
         }
 
@@ -105,6 +108,11 @@ const register = async function (req, res) {
         data.password = await hashPassWord(data.password)
 
         //address
+        if(address){
+            const { shipping, billing } = address
+            if(!shipping.street || !shipping.city ||!shipping.pincode ||!billing.street ||!billing.city ||!billing.pincode){
+                return res.status(400).send({ status: false, message: "enter required address field" })
+            }
         if (!isValid(shipping.street) || !isValid(shipping.city) || !isValid(shipping.pincode)) {
             return res.status(400).send({ status: false, message: "enter valid shipping address" })
         }
@@ -112,8 +120,10 @@ const register = async function (req, res) {
         if (!isValid(billing.street) || !isValid(billing.city) || !isValid(billing.pincode)) {
             return res.status(400).send({ status: false, message: "enter valid billing address" })
         }
-
-
+            data.address = address
+        }   
+        
+    
 
         // profileImage
         let files = req.files
@@ -159,13 +169,7 @@ const login = async function (req, res) {
         if (!isValid(email) || !isValidEmail(email)) {
             return res.status(400).send({ status: false, message: "enter valid email" })
         }
-
-        const isEmail = await userModel.findOne({ email: email })
-
-        if (isEmail) {
-            return res.status(400).send({ status: false, message: "email is already registered" })
-        }
-
+        
         //password
         if (!isValid(password) || password.length < 8 || password.length > 15) {
             return res.status(400).send({ status: false, message: "enter valid password" })
@@ -230,13 +234,18 @@ const getUser = async function (req, res) {
 const updateUser = async function (req, res) {
     try {
         const userId = req.params.userId;
-        let data = JSON.parse(req.body.data);
+        let data = req.body;
+
+        const { fname, lname, email, phone, password } = data
+        let address = JSON.parse(req.body.address);
+    
         let files = req.files
 
-
-        const { fname, lname, email, phone, password, address } = data
-        const { shipping, billing } = address
-
+        //body validation
+        if (!isValidRequestBody(data)) {
+            return res.status(400).send({ status: false, message: "Enter data in body" })
+        }
+        
         //fname
         if (fname) {
             if (!isValid(fname)) {
@@ -284,6 +293,7 @@ const updateUser = async function (req, res) {
 
         //address
         if (address) {
+            const { shipping, billing } = address
             if (!isValid(shipping.street) || !isValid(shipping.city) || !isValid(shipping.pincode)) {
                 return res.status(400).send({ status: false, message: "enter valid shipping address" })
             }
@@ -291,6 +301,7 @@ const updateUser = async function (req, res) {
             if (!isValid(billing.street) || !isValid(billing.city) || !isValid(billing.pincode)) {
                 return res.status(400).send({ status: false, message: "enter valid billing address" })
             }
+            data.address = address
         }
 
         if (files) {

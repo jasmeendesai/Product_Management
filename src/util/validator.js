@@ -57,5 +57,18 @@ const comparePassword = async (password, hashpassword) => {
     return bcrypt.compare(password, hashpassword);
 };
 
+//=============================================================================
 
-module.exports = { isValid, isValidRequestBody, isValidEmail, isValidObjectId, isValidMobileNum ,hashPassWord, comparePassword}
+function TotalPrice(items, products) {
+    let totalPrice = 0
+    for (const item of items) {
+        const product = products.find(product => product._id.toString() === item.productId.toString());
+        if (product) {
+            totalPrice += product.price * item.quantity;
+        }
+    }
+    return totalPrice;
+}
+
+
+module.exports = { isValid, isValidRequestBody, isValidEmail, isValidObjectId, isValidMobileNum ,hashPassWord, comparePassword, TotalPrice}
